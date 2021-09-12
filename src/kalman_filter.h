@@ -63,6 +63,9 @@ class KalmanFilter {
 
   // measurement covariance matrix
   Eigen::MatrixXd R_;
+  
+  //Radar Prediction Vector from Cartesian Coords..
+  Eigen::VectorXd z_pred_radar_;
 };
 
 #endif // KALMAN_FILTER_H_
