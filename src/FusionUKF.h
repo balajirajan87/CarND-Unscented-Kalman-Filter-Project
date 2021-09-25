@@ -1,25 +1,25 @@
-#ifndef FusionEKF_H_
-#define FusionEKF_H_
+#ifndef FusionUKF_H_
+#define FusionUKF_H_
 
 #include <fstream>
 #include <string>
 #include <vector>
 #include "Eigen/Dense"
-#include "kalman_filter.h"
+#include "unscented_kalman_filter.h"
 #include "measurement_package.h"
 #include "tools.h"
 
-class FusionEKF {
+class FusionUKF {
  public:
   /**
    * Constructor.
    */
-  FusionEKF();
+  FusionUKF();
 
   /**
    * Destructor.
    */
-  virtual ~FusionEKF();
+  virtual ~FusionUKF();
 
   /**
    * Run the whole flow of the Kalman Filter from here.
@@ -29,7 +29,7 @@ class FusionEKF {
   /**
    * Kalman Filter update and prediction math lives in here.
    */
-  KalmanFilter ekf_;
+  UKalmanFilter ukf_;
 
  private:
   // check whether the tracking toolbox was initialized or not (first measurement)
@@ -43,11 +43,6 @@ class FusionEKF {
   Eigen::MatrixXd R_laser_;
   Eigen::MatrixXd R_radar_;
   Eigen::MatrixXd H_laser_;
-  Eigen::MatrixXd Hj_;
-  
-  //acceleration noise components
-  float noise_ax;
-  float noise_ay;
   
   //to count the interations
   int count;

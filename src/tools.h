@@ -23,9 +23,9 @@ class Tools {
                                 const std::vector<Eigen::VectorXd> &ground_truth);
 
   /**
-   * A helper method to calculate Jacobians.
+   * A helper method to calculate NIS Score.
    */
-  Eigen::MatrixXd CalculateJacobian(const Eigen::VectorXd& x_state);
+  //double CalculateNISScore(const Eigen::VectorXd& z_state, const Eigen::VectorXd& z_meas, const Eigen::MatrixXd& S);
 
 };
 

@@ -2,7 +2,7 @@
 #include <uWS/uWS.h>
 #include <iostream>
 #include "json.hpp"
-#include "FusionEKF.h"
+#include "FusionUKF.h"
 #include "tools.h"
 
 using Eigen::MatrixXd;
@@ -33,14 +33,14 @@ int main() {
   uWS::Hub h;
 
   // Create a Kalman Filter instance
-  FusionEKF fusionEKF;
+  FusionUKF fusionUKF_;
 
   // used to compute the RMSE later
   Tools tools;
   vector<VectorXd> estimations;
   vector<VectorXd> ground_truth;
 
-  h.onMessage([&fusionEKF,&tools,&estimations,&ground_truth]
+  h.onMessage([&fusionUKF_,&tools,&estimations,&ground_truth]
               (uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, 
                uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
@@ -95,35 +95,42 @@ int main() {
           float y_gt;
           float vx_gt;
           float vy_gt;
+		  float phi_gt;
+		  float phi_dot_gt;
           iss >> x_gt;
           iss >> y_gt;
           iss >> vx_gt;
           iss >> vy_gt;
+		  iss >> phi_gt;
+		  iss >> phi_dot_gt;
 
-          VectorXd gt_values(4);
+          VectorXd gt_values(5);
           gt_values(0) = x_gt;
           gt_values(1) = y_gt; 
-          gt_values(2) = vx_gt;
-          gt_values(3) = vy_gt;
+          gt_values(2) = sqrt(vx_gt*vx_gt + vy_gt*vy_gt);
+          gt_values(3) = phi_gt;
+		  gt_values(4) = phi_dot_gt;
           ground_truth.push_back(gt_values);
           
           // Call ProcessMeasurement(meas_package) for Kalman filter
-          fusionEKF.ProcessMeasurement(meas_package);       
+          fusionUKF_.ProcessMeasurement(meas_package);       
 
           // Push the current estimated x,y positon from the Kalman filter's 
           //   state vector
 
-          VectorXd estimate(4);
+          VectorXd estimate(5);
 
-          double p_x = fusionEKF.ekf_.x_(0);
-          double p_y = fusionEKF.ekf_.x_(1);
-          double v1  = fusionEKF.ekf_.x_(2);
-          double v2 = fusionEKF.ekf_.x_(3);
+          double p_x = fusionUKF_.ukf_.x_(0);
+          double p_y = fusionUKF_.ukf_.x_(1);
+          double v  = fusionUKF_.ukf_.x_(2);
+          double phi = fusionUKF_.ukf_.x_(3);
+		  double phi_dot = fusionUKF_.ukf_.x_(4);
 
           estimate(0) = p_x;
           estimate(1) = p_y;
-          estimate(2) = v1;
-          estimate(3) = v2;
+          estimate(2) = v;
+          estimate(3) = phi;
+		  estimate(4) = phi_dot;
         
           estimations.push_back(estimate);
 
@@ -134,8 +141,9 @@ int main() {
           msgJson["estimate_y"] = p_y;
           msgJson["rmse_x"] =  RMSE(0);
           msgJson["rmse_y"] =  RMSE(1);
-          msgJson["rmse_vx"] = RMSE(2);
-          msgJson["rmse_vy"] = RMSE(3);
+          msgJson["rmse_v"] = RMSE(2);
+          msgJson["rmse_phi"] = RMSE(3);
+		  msgJson["rmse_phidot"] = RMSE(4);
           auto msg = "42[\"estimate_marker\"," + msgJson.dump() + "]";
           // std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
