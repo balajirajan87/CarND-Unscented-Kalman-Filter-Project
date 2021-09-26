@@ -18,14 +18,14 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
    * TODO: Calculate the RMSE here.
    */
   //initialize the variables..
-  VectorXd rmse(5);
-  rmse << 0,0,0,0,0;
-  VectorXd error(5);
-  error << 0,0,0,0,0;
-  VectorXd eSqr(5);
-  eSqr << 0,0,0,0,0;
-  VectorXd eSqrMean(5);
-  eSqrMean << 0,0,0,0,0;
+  VectorXd rmse(4);
+  rmse << 0,0,0,0;
+  VectorXd error(4);
+  error << 0,0,0,0;
+  VectorXd eSqr(4);
+  eSqr << 0,0,0,0;
+  VectorXd eSqrMean(4);
+  eSqrMean << 0,0,0,0;
   
   // TODO: YOUR CODE HERE
   // check the validity of the following inputs:
@@ -56,8 +56,11 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
   return rmse;
 }
 /*
-double Tools::CalculateNISScore(const VectorXd& z_state, const VectorXd& z_meas, const MatrixXd& S) 
+double Tools::CalculateNISScore(const VectorXd &z_state, const VectorXd &z_meas, const MatrixXd &S) 
 {
-
+  VectorXd z_diff(3);
+  z_diff = z_meas - z_state;
+  VectorXd z_diff_T = z_diff.transpose();
+  double nisscore = z_diff_T * S.inverse() * z_diff;
 }
 */

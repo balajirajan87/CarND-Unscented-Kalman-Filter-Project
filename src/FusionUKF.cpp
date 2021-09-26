@@ -30,6 +30,8 @@ FusionUKF::FusionUKF()
    * TODO: Finish initializing the FusionEKF.
    * TODO: Set the process and measurement noises
    */
+  //Initialize the state x_
+  ukf_.x_ << 0,0,0,0,0;
   
   //Initialize the Covariance matrix P_
   ukf_.P_ << 1, 0, 0, 0, 0,

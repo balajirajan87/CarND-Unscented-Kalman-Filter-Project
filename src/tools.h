@@ -25,7 +25,7 @@ class Tools {
   /**
    * A helper method to calculate NIS Score.
    */
-  //double CalculateNISScore(const Eigen::VectorXd& z_state, const Eigen::VectorXd& z_meas, const Eigen::MatrixXd& S);
+  //double CalculateNISScore(const Eigen::VectorXd &z_state, const Eigen::VectorXd &z_meas, const Eigen::MatrixXd &S);
 
 };
 

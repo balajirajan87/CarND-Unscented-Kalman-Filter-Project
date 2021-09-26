@@ -24,7 +24,7 @@ void UKalmanFilter::AugmentedSigmaPoints()
 	n_x = 5;
 	n_aug = 7;
 	std_a = 3;
-	std_yawdd = 0.2;
+	std_yawdd = 4;
 	lambda = 3 - n_aug;
 
 	// create augmented state covariance
@@ -32,6 +32,13 @@ void UKalmanFilter::AugmentedSigmaPoints()
 
 	// create sigma point matrix
 	Xsig_aug_ = MatrixXd(n_aug, 2 * n_aug + 1);
+    Xsig_aug_ << 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0;
 
 	// create augmented mean state
 	VectorXd x_mean = VectorXd(n_aug);
@@ -72,6 +79,11 @@ void UKalmanFilter::SigmaPointPrediction()
 {
     // create matrix with predicted sigma points as columns
 	Xsig_pred_ = MatrixXd(n_x, 2 * n_aug + 1);
+    Xsig_pred_ << 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+                  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0;
 
 	VectorXd x_point = VectorXd(7);
 	VectorXd vec1 = VectorXd(5);
@@ -112,7 +124,7 @@ void UKalmanFilter::SigmaPointPrediction()
 	}
 }
 
-void UKalmanFilter::PredictMeanAndCovariance() 
+void UKalmanFilter::PredictMeanAndCovariance()
 {
 
   // create vector for weights
@@ -120,10 +132,6 @@ void UKalmanFilter::PredictMeanAndCovariance()
   weights_ <<  0,0,0,0,0,0,0,0,0,0,0,0,0,0,0;
   
   VectorXd x_diff = VectorXd(n_x);
-
-  /**
-   * Student part begin
-   */
 
   // set weights
   for (int i=0; i<(2*n_aug+1); i++)
@@ -139,29 +147,31 @@ void UKalmanFilter::PredictMeanAndCovariance()
   }
   
   // predict state mean
+  x_ << 0,0,0,0,0;
   for (int i=0; i<(2*n_aug+1); i++)
   {
       x_ = x_ + (weights_(i)*Xsig_pred_.col(i));
   }
   
   // predict state covariance matrix
+  P_ << 0,0,0,0,0,
+       	0,0,0,0,0,
+       	0,0,0,0,0,
+       	0,0,0,0,0,
+       	0,0,0,0,0;
   for (int i=0; i<(2*n_aug+1); i++)
   {
-      x_diff = Xsig_pred_.col(i)-x_;
-      while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
-      while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
+      x_diff = Xsig_pred_.col(i) - x_;
+      while (x_diff(3) > M_PI)
+      {
+        x_diff(3) -= 2.*M_PI;
+      }
+      while (x_diff(3) < -M_PI)
+      {
+        x_diff(3) += 2.*M_PI;
+      }
       P_ = P_ + (weights_(i)*(x_diff*x_diff.transpose()));
   }
-
-  /**
-   * Student part end
-   */
-
-  // print result
-  std::cout << "Predicted state" << std::endl;
-  std::cout << x_ << std::endl;
-  std::cout << "Predicted covariance matrix" << std::endl;
-  std::cout << P_ << std::endl;
 }
 
 void UKalmanFilter::PredictRadarMeasurement() 
@@ -172,18 +182,22 @@ void UKalmanFilter::PredictRadarMeasurement()
 
   // create matrix for sigma points in measurement space
   Zsig_ = MatrixXd(n_z, 2 * n_aug + 1);
-
+  Zsig_ << 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+           0,0,0,0,0,0,0,0,0,0,0,0,0,0,0;
+  
   // mean predicted measurement
-  VectorXd z_pred_radar_ = VectorXd(n_z);
+  z_pred_radar_ = VectorXd(n_z);
+  z_pred_radar_ << 0,0,0;
   
   // measurement covariance matrix S
-  MatrixXd S_ = MatrixXd(n_z,n_z);
+  S_ = MatrixXd(n_z,n_z);
+  S_ << 0,0,0,
+        0,0,0,
+        0,0,0;
 
   VectorXd z_diff = VectorXd(n_z);
 
-  /**
-   * Student part begin
-   */
   // transform sigma points into measurement space
   VectorXd x_vec = VectorXd(n_x);
   VectorXd z_vec = VectorXd(n_z);
@@ -204,20 +218,19 @@ void UKalmanFilter::PredictRadarMeasurement()
   // calculate innovation covariance matrix S
   for (int i=0; i<(2*n_aug+1); i++)
   {
-      z_diff = Zsig_.col(i)-z_pred_radar_;
-      while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
-      while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
+      z_diff = Zsig_.col(i) - z_pred_radar_;
+      while (z_diff(1)> M_PI) 
+      {
+        z_diff(1) -= 2.*M_PI;
+      }
+      while (z_diff(1)<-M_PI) 
+      {
+        z_diff(1) += 2.*M_PI;
+      }
       S_ = S_ + (weights_(i)*(z_diff*z_diff.transpose()));
   }
 
   S_ = S_ + R_;
-  /**
-   * Student part end
-   */
-
-  // print result
-  std::cout << "z_pred: " << std::endl << z_pred_radar_ << std::endl;
-  std::cout << "S: " << std::endl << S_ << std::endl;
 }
 
 void UKalmanFilter::UpdateStateRadar(const VectorXd &z) 
@@ -225,53 +238,62 @@ void UKalmanFilter::UpdateStateRadar(const VectorXd &z)
 
   // create matrix for cross correlation Tc
   MatrixXd Tc = MatrixXd(n_x, n_z);
-
-  /**
-   * Student part begin
-   */
-
+  
   // calculate cross correlation matrix
   Tc.fill(0.0);
-  for (int i = 0; i < 2 * n_aug + 1; ++i) {  // 2n+1 simga points
+  for (int i = 0; i < (2 * n_aug + 1); ++i) 
+  {  // 2n+1 simga points
     // residual
     VectorXd z_diff = Zsig_.col(i) - z_pred_radar_;
     // angle normalization
-    while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
-    while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
+    while(z_diff(1) > M_PI)
+    {
+      z_diff(1) -= 2.*M_PI;
+    }
+    while(z_diff(1)<-M_PI) 
+    {
+      z_diff(1) += 2.*M_PI;
+    }
 
     // state difference
     VectorXd x_diff = Xsig_pred_.col(i) - x_;
     // angle normalization
-    while (x_diff(3)> M_PI) x_diff(3)-=2.*M_PI;
-    while (x_diff(3)<-M_PI) x_diff(3)+=2.*M_PI;
+    while(x_diff(3)> M_PI) 
+    {
+      x_diff(3) -= 2.*M_PI;
+    }
+    while(x_diff(3)<-M_PI) 
+    {
+      x_diff(3) += 2.*M_PI;
+    }
 
-    Tc = Tc + weights_(i) * x_diff * z_diff.transpose();
+    Tc = Tc + (weights_(i) * x_diff * z_diff.transpose());
   }
 
   // Kalman gain K;
   MatrixXd K = Tc * S_.inverse();
 
   // residual
-  VectorXd z_diff = z - z_pred_radar_;
+  VectorXd z_diff_meas = z - z_pred_radar_;
 
   // angle normalization
-  while (z_diff(1)> M_PI) z_diff(1)-=2.*M_PI;
-  while (z_diff(1)<-M_PI) z_diff(1)+=2.*M_PI;
+  while(z_diff_meas(1) > M_PI) 
+  {
+    z_diff_meas(1) -= 2.*M_PI;
+  }
+  while(z_diff_meas(1) < -M_PI) 
+  {
+    z_diff_meas(1) += 2.*M_PI;
+  }
 
   // update state mean and covariance matrix
-  x_ = x_ + K * z_diff;
+  x_ = x_ + K * z_diff_meas;
   P_ = P_ - K*S_*K.transpose();
-
-  /**
-   * Student part end
-   */
 }
 
 
 void UKalmanFilter::UpdateStateLaser(const VectorXd &z) 
 {
-
-  
   //calculate the matrices..
   VectorXd z_pred = H_ * x_;
   VectorXd y = z - z_pred;
